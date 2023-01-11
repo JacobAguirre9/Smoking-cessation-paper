@@ -21,9 +21,9 @@ library(broom.mixed)
 ########
 # Begin Writing Models
 
-PoissonModel <- glm(data$Addiction ~ data$Sex + data$EducAttainment + data$Last12_AttemptQuit + data$Length_Prescriptions + data$InsuranceStatus + data$Race_levels + data$NoQuitAttempt)
+PoissonModel <- glm(Addiction ~ Sex + EducAttainment + Last12_AttemptQuit + Length_Prescriptions + InsuranceStatus + Race_levels + NoQuitAttempt, data, family = poisson(link = "log"))
 
-PoissonModel2 <- glm(data$Addiction ~ data$Last12_AttemptQuit + data$Past12_FrequencyQuit + data$UsedECigs_helpquit + data$QuitAttempt_Therapy + data$UsedPrescriptions_Quit + data$EverUseAlcohol)
+PoissonModel2 <- glm(Addiction ~ Last12_AttemptQuit + Past12_FrequencyQuit + UsedECigs_helpquit + QuitAttempt_Therapy + UsedPrescriptions_Quit + EverUseAlcohol, data, family = poisson(link = "log"))
 
 ########
 
@@ -33,5 +33,9 @@ PoissonModel2 <- glm(data$Addiction ~ data$Last12_AttemptQuit + data$Past12_Freq
 plot_summs(PoissonModel, plot.distributions = TRUE, rescale.distributions = TRUE)
 
 plot_summs(PoissonModel2, plot.distributions = TRUE, rescale.distributions = TRUE)
+
+# plot regression coefficients for PoissonModel and PoissonModel2
+plot_summs(PoissonModel, PoissonModel2, scale = TRUE, exp = TRUE)
+interact_plot(PoissonModel2, pred = Addiction)
 
 ########
