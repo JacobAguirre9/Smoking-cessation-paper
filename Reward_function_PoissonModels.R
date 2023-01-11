@@ -21,7 +21,9 @@ library(broom.mixed)
 ########
 # Begin Writing Models
 
-PoissonModel <- glm(Addiction ~ Sex + EducAttainment + Last12_AttemptQuit + Length_Prescriptions + InsuranceStatus + Race_levels + NoQuitAttempt)
+PoissonModel <- glm(data$Addiction ~ data$Sex + data$EducAttainment + data$Last12_AttemptQuit + data$Length_Prescriptions + data$InsuranceStatus + data$Race_levels + data$NoQuitAttempt)
+
+PoissonModel2 <- glm(data$Addiction ~ data$Last12_AttemptQuit + data$Past12_FrequencyQuit + data$UsedECigs_helpquit + data$QuitAttempt_Therapy + data$UsedPrescriptions_Quit + data$EverUseAlcohol)
 
 ########
 
@@ -29,5 +31,7 @@ PoissonModel <- glm(Addiction ~ Sex + EducAttainment + Last12_AttemptQuit + Leng
 # Begin analysing coefficients and rewards
 
 plot_summs(PoissonModel, plot.distributions = TRUE, rescale.distributions = TRUE)
+
+plot_summs(PoissonModel2, plot.distributions = TRUE, rescale.distributions = TRUE)
 
 ########
