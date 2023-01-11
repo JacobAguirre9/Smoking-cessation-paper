@@ -105,6 +105,9 @@ plot_summs(PoissonModel2, plot.distributions = TRUE, rescale.distributions = TRU
 plot_summs(PoissonModel3, plot.distributions = TRUE, rescale.distributions = TRUE)
 
 # plot regression coefficients for PoissonModel and PoissonModel2 and PoissonModel3
-plot_summs(PoissonModel, PoissonModel2, PoissonModel3, scale = TRUE, exp = TRUE)
+plot_summs(PoissonModel, PoissonModel2, PoissonModel3, scale = TRUE, exp = FALSE)
 
+summary(PoissonModel)
+summary(PoissonModel2)
+summary(PoissonModel3)
 
