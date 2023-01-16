@@ -1,15 +1,5 @@
-library(haven)
-data <- read_dta("~/Downloads/All_Waves_CessationPaper (1).dta")
-columns <- names(data)
-
-wave1_only <- data[data$wave1 == 1 & data$wave2 == 0 & data$wave3 == 0 & data$wave4 == 0 & data$wave5 == 0,]
-wave2_only <- data[data$wave1 == 0 & data$wave2 == 1 & data$wave3 == 0 & data$wave4 == 0 & data$wave5 == 0,]
-wave3_only <- data[data$wave1 == 0 & data$wave2 == 0 & data$wave3 == 1 & data$wave4 == 0 & data$wave5 == 0,]
-wave4_only <- data[data$wave1 == 0 & data$wave2 == 0 & data$wave3 == 0 & data$wave4 == 1 & data$wave5 == 0,]
-wave5_only <- data[data$wave1 == 0 & data$wave2 == 0 & data$wave3 == 0 & data$wave4 == 0 & data$wave5 == 1,]
-
-
-
+# Set Working directory
+> setwd("~/Documents/Research with Garcia/Smoking Cessation Paper")
 
 ########
 # Load packages and library
@@ -24,90 +14,100 @@ install.packages("broom")
 install.packages("broom.mixed")
 library(broom)
 library(broom.mixed)
+library(haven)
 ########
 
 
-########
-# Begin Writing Models for all data
 
-PoissonModel <- glm(Addiction ~ Sex + EducAttainment + Last12_AttemptQuit + Length_Prescriptions + InsuranceStatus + Race_levels + NoQuitAttempt, data, family = poisson(link = "log"))
+data <- read_dta("All_Waves_CessationPaper (1).dta")
+columns <- names(data)
 
-PoissonModel2 <- glm(Addiction ~ Last12_AttemptQuit + hsi + Past12_FrequencyQuit + UsedECigs_helpquit + QuitAttempt_Therapy + UsedPrescriptions_Quit + EverUseAlcohol, data, family = poisson(link = "log"))
+wave1_only <- data[data$wave1 == 1 & data$wave2 == 0 & data$wave3 == 0 & data$wave4 == 0 & data$wave5 == 0,]
+wave2_only <- data[data$wave1 == 0 & data$wave2 == 1 & data$wave3 == 0 & data$wave4 == 0 & data$wave5 == 0,]
+wave3_only <- data[data$wave1 == 0 & data$wave2 == 0 & data$wave3 == 1 & data$wave4 == 0 & data$wave5 == 0,]
+wave4_only <- data[data$wave1 == 0 & data$wave2 == 0 & data$wave3 == 0 & data$wave4 == 1 & data$wave5 == 0,]
+wave5_only <- data[data$wave1 == 0 & data$wave2 == 0 & data$wave3 == 0 & data$wave4 == 0 & data$wave5 == 1,]
 
-PoissonModel3 <- glm(Addiction ~ hsi + SexualOrientation + Race_levels + Sex + EducAttainment + Last12_AttemptQuit + Past12_FrequencyQuit + UsedCigs_helpquit + QuitAttempt_Therapy + UsedPrescriptions_Quit + EverUseAlcohol, data, family = poisson(link="log"))
+# Individuals in all 5 waves
+all_waves_data <- data[data$wave_all == 31,]
 
-########
-# Begin writing models, seperated by timewave. We will then plot the coefficients.
-# Wave 1 Models
-Wave1_PoissonModel <- glm(Addiction ~ Sex + EducAttainment + Last12_AttemptQuit + Length_Prescriptions + InsuranceStatus + Race_levels + NoQuitAttempt, wave1_only, family = poisson(link = "log"))
-Wave1_PoissonModel2 <- glm(Addiction ~ Last12_AttemptQuit + hsi + Past12_FrequencyQuit + UsedECigs_helpquit + QuitAttempt_Therapy + UsedPrescriptions_Quit + EverUseAlcohol, wave1_only, family = poisson(link = "log"))
-Wave1_PoissonModel3 <- glm(Addiction ~ hsi + SexualOrientation + Race_levels + Sex + EducAttainment + Last12_AttemptQuit + Past12_FrequencyQuit + UsedCigs_helpquit + QuitAttempt_Therapy + UsedPrescriptions_Quit + EverUseAlcohol, wave1_only, family = poisson(link="log"))
+# CASEID and PERSONID give two different answers... how (???)
+all_waves_data %>% 
+  select(CASEID) %>% 
+  distinct() %>% 
+  nrow()
 
-wave1model1_coef <- coef(Wave1_PoissonModel)
-wave1model2_coef <- coef(Wave1_PoissonModel2)
-wave1model3_coef <- coef(Wave1_PoissonModel3)
+# Initialize empty list for models
 
-# Wave 2 Models
-Wave2_PoissonModel <- glm(Addiction ~ Sex + EducAttainment + Last12_AttemptQuit + Length_Prescriptions + InsuranceStatus + Race_levels + NoQuitAttempt, wave2_only, family = poisson(link = "log"))
-Wave2_PoissonModel2 <- glm(Addiction ~ Last12_AttemptQuit + hsi + Past12_FrequencyQuit + UsedECigs_helpquit + QuitAttempt_Therapy + UsedPrescriptions_Quit + EverUseAlcohol, wave2_only, family = poisson(link = "log"))
-Wave2_PoissonModel3 <- glm(Addiction ~ hsi + SexualOrientation + Race_levels + Sex + EducAttainment + Last12_AttemptQuit + Past12_FrequencyQuit + UsedCigs_helpquit + QuitAttempt_Therapy + UsedPrescriptions_Quit + EverUseAlcohol, wave2_only, family = poisson(link="log"))
+models <- list()
 
-wave2model1_coef <- coef(Wave2_PoissonModel)
-wave2model2_coef <- coef(Wave2_PoissonModel2)
-wave2model3_coef <- coef(Wave2_PoissonModel3)
+# Group the data by the id column
+individual_data <- group_by(all_waves_data, PERSONID)
 
-# Wave 3 Models 
+# Count the number of rows for each individual
+row_counts <- summarize(individual_data, n = n())
 
-Wave3_PoissonModel <- glm(Addiction ~ Sex + EducAttainment + Last12_AttemptQuit + Length_Prescriptions + InsuranceStatus + Race_levels + NoQuitAttempt, wave3_only, family = poisson(link = "log"))
-# Above model seems to not converge >_> 
-Wave3_PoissonModel2 <- glm(Addiction ~ Last12_AttemptQuit + hsi + Past12_FrequencyQuit + UsedECigs_helpquit + QuitAttempt_Therapy + UsedPrescriptions_Quit + EverUseAlcohol, wave3_only, family = poisson(link = "log"))
-Wave3_PoissonModel3 <- glm(Addiction ~ hsi + SexualOrientation + Race_levels + Sex + EducAttainment + Last12_AttemptQuit + Past12_FrequencyQuit + UsedCigs_helpquit + QuitAttempt_Therapy + UsedPrescriptions_Quit + EverUseAlcohol, wave3_only, family = poisson(link="log"))
+# Check if any individual has more than 5 rows
+multiple_rows <- row_counts[row_counts$n > 5,]
 
-wave3model1_coef <- coef(Wave3_PoissonModel)
-wave3model2_coef <- coef(Wave3_PoissonModel2)
-wave3model3_coef <- coef(Wave3_PoissonModel3)
+# Print the individuals with more than 5 rows
+print(multiple_rows)
 
-# Wave 4 Models
+# Begin modeling
 
-Wave4_PoissonModel <- glm(Addiction ~ Sex + EducAttainment + Last12_AttemptQuit + Length_Prescriptions + InsuranceStatus + Race_levels + NoQuitAttempt, wave4_only, family = poisson(link = "log"))
-# Same issue as above, this model fails to converge. Data issue (?)
-Wave4_PoissonModel2 <- glm(Addiction ~ Last12_AttemptQuit + hsi + Past12_FrequencyQuit + UsedECigs_helpquit + QuitAttempt_Therapy + UsedPrescriptions_Quit + EverUseAlcohol, wave4_only, family = poisson(link = "log"))
-Wave4_PoissonModel3 <- glm(Addiction ~ hsi + SexualOrientation + Race_levels + Sex + EducAttainment + Last12_AttemptQuit + Past12_FrequencyQuit + UsedCigs_helpquit + QuitAttempt_Therapy + UsedPrescriptions_Quit + EverUseAlcohol, wave4_only, family = poisson(link="log"))
-
-wave4model1_coef <- coef(Wave4_PoissonModel)
-wave4model2_coef <- coef(Wave4_PoissonModel2)
-wave4model3_coef <- coef(Wave4_PoissonModel3)
-
-# Wave 5 Models
-
-Wave5_PoissonModel <- glm(Addiction ~ Sex + EducAttainment + Last12_AttemptQuit + Length_Prescriptions + InsuranceStatus + Race_levels + NoQuitAttempt, wave5_only, family = poisson(link = "log"))
-# Definitely data issue >_< look into this ! 
-Wave5_PoissonModel2 <- glm(Addiction ~ Last12_AttemptQuit + hsi + Past12_FrequencyQuit + UsedECigs_helpquit + QuitAttempt_Therapy + UsedPrescriptions_Quit + EverUseAlcohol, wave5_only, family = poisson(link = "log"))
-Wave5_PoissonModel3 <- glm(Addiction ~ hsi + SexualOrientation + Race_levels + Sex + EducAttainment + Last12_AttemptQuit + Past12_FrequencyQuit + UsedCigs_helpquit + QuitAttempt_Therapy + UsedPrescriptions_Quit + EverUseAlcohol, wave5_only, family = poisson(link="log"))
-
-wave5model1_coef <- coef(Wave5_PoissonModel)
-wave5model2_coef <- coef(Wave5_PoissonModel2)
-wave5model3_coef <- coef(Wave5_PoissonModel3)
-#######
+# Install and load the glm2 package if it's not already installed
+install.packages("glm2")
+library(glm2)
 
 
+# Iterate through the waves
+for (i in 1:5) {
+  
+  # Subset the data to include only rows for wave i
+  wave_i_data <- all_waves_data[all_waves_data$wave == i,]
+  
+  # Fit the Poisson GLM model
+  model <- glm(Addiction ~ Sex + EducAttainment + InsuranceStatus + Race_levels, data = wave_i_data, family = poisson(link = "log"))
+  
+  # Store the model in the models list
+  models[[i]] <- model
+}
+
+# Print the models
+
+for (i in 1:5) {
+  # Print the number of observations in the model
+  cat("Wave", i, ":", nrow(wave_i_data), "observations\n")
+  
+  # Print the summary of the model
+  summary(models[[i]])
+}
+
+summary.glm(models[[5]])
 
 
+# Initialize empty lists to store the variables
+ct <- list()
+dt <- list()
+at <- list()
+qt <- list()
 
+# Iterate through the waves
+for (i in 1:5) {
+  # Subset the data to include only rows for wave i
+  wave_i_data <- all_waves_data[all_waves_data$wave == i,]
+  
+  # Create the variable ct from the current smoking status variable
+  ct[[i]] <- wave_i_data[,c("Ciguser", "hsi", "Cigs_smoked_daily_1yearago")]
+  
+  # Create the variable dt from the demographic variables
+  dt[[i]] <- wave_i_data[, c("Sex", "EducAttainment", "InsuranceStatus", "Race_levels", "SexualOrientation")]
+  
+  # Create the variable at from the chosen action variable
+  at[[i]] <- wave_i_data[, c("UsedPrescriptions_Quit", "UsedECigs_helpquit", "NoQuitAttempt", "QuitAttempt_NicInhaler", "UsedNicotinePatch", "QuitAttempt_NicPatch", "QuitAttempt_NasalSpray", "QuitAttempt_Therapy")]
+  
+  # Create the variable qt from the smoking intentions variable
+  qt[[i]] <- wave_i_data[,c("IntentToQuit_nic", "Last12_AttemptQuit", "Last12_SlowAttempt", "Past12_FrequencyQuit")]
+}
 
-########
-# Begin analysing coefficients and rewards
-
-plot_summs(PoissonModel, plot.distributions = TRUE, rescale.distributions = TRUE)
-
-plot_summs(PoissonModel2, plot.distributions = TRUE, rescale.distributions = TRUE)
-
-plot_summs(PoissonModel3, plot.distributions = TRUE, rescale.distributions = TRUE)
-
-# plot regression coefficients for PoissonModel and PoissonModel2 and PoissonModel3
-plot_summs(PoissonModel, PoissonModel2, PoissonModel3, scale = TRUE, exp = FALSE)
-
-summary(PoissonModel)
-summary(PoissonModel2)
-summary(PoissonModel3)
 
