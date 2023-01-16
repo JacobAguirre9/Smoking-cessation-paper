@@ -22,20 +22,13 @@ library(haven)
 data <- read_dta("All_Waves_CessationPaper (1).dta")
 columns <- names(data)
 
-wave1_only <- data[data$wave1 == 1 & data$wave2 == 0 & data$wave3 == 0 & data$wave4 == 0 & data$wave5 == 0,]
-wave2_only <- data[data$wave1 == 0 & data$wave2 == 1 & data$wave3 == 0 & data$wave4 == 0 & data$wave5 == 0,]
-wave3_only <- data[data$wave1 == 0 & data$wave2 == 0 & data$wave3 == 1 & data$wave4 == 0 & data$wave5 == 0,]
-wave4_only <- data[data$wave1 == 0 & data$wave2 == 0 & data$wave3 == 0 & data$wave4 == 1 & data$wave5 == 0,]
-wave5_only <- data[data$wave1 == 0 & data$wave2 == 0 & data$wave3 == 0 & data$wave4 == 0 & data$wave5 == 1,]
-
 # Individuals in all 5 waves
 all_waves_data <- data[data$wave_all == 31,]
 
-# CASEID and PERSONID give two different answers... how (???)
-all_waves_data %>% 
-  select(CASEID) %>% 
-  distinct() %>% 
-  nrow()
+#clean vars
+all_waves_data$QuitAttempt_NasalSpray[all_waves_data$QuitAttempt_NasalSpray < 0] <- NA
+all_waves_data$Last12_AttemptQuit[all_waves_data$Last12_AttemptQuit < 0] <- NA
+
 
 # Initialize empty list for models
 
@@ -67,24 +60,14 @@ for (i in 1:5) {
   wave_i_data <- all_waves_data[all_waves_data$wave == i,]
   
   # Fit the Poisson GLM model
-  model <- glm(Addiction ~ Sex + EducAttainment + InsuranceStatus + Race_levels, data = wave_i_data, family = poisson(link = "log"))
+  model <- glm(Addiction ~ Sex + EducAttainment + InsuranceStatus + Race_levels + IntentToQuit_nic + Last12_AttemptQuit + QuitAttempt_NicPill + QuitAttempt_NicGum + QuitAttempt_NicPatch + QuitAttempt_NasalSpray + QuitAttempt_NicInhaler + UsedECigs_helpquit + QuitAttempt_Therapy + Past12_FrequencyQuit, data = wave_i_data, family = poisson(link = "log"))
   
   # Store the model in the models list
   models[[i]] <- model
 }
 
 # Print the models
-
-for (i in 1:5) {
-  # Print the number of observations in the model
-  cat("Wave", i, ":", nrow(wave_i_data), "observations\n")
-  
-  # Print the summary of the model
-  summary(models[[i]])
-}
-
-summary.glm(models[[5]])
-
+summary.glm(models[[2]])
 
 # Initialize empty lists to store the variables
 ct <- list()
@@ -92,7 +75,8 @@ dt <- list()
 at <- list()
 qt <- list()
 
-# Iterate through the waves
+# Iterate through the waves for what the variables should be. But, we can't regress a list (duh)
+# so just add these manually to the regression above
 for (i in 1:5) {
   # Subset the data to include only rows for wave i
   wave_i_data <- all_waves_data[all_waves_data$wave == i,]
@@ -109,5 +93,4 @@ for (i in 1:5) {
   # Create the variable qt from the smoking intentions variable
   qt[[i]] <- wave_i_data[,c("IntentToQuit_nic", "Last12_AttemptQuit", "Last12_SlowAttempt", "Past12_FrequencyQuit")]
 }
-
 
